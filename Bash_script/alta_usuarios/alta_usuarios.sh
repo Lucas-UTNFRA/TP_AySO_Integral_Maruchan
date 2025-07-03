@@ -4,7 +4,7 @@ clear
 ###############################
 #
 # Parametros:
-#  - Lista de Usuarios a crear
+#  - Lista de Usuarios a creiar
 #  - Usuario del cual se obtendra la clave
 #
 #  Tareas:
@@ -14,14 +14,27 @@ clear
 ###############################
 
 LISTA=$1
+USUARIO_PARAMETRO=$2
+CLAVE=$(sudo grep "$USUARIO_PARAMETRO" /etc/shadow | awk -F ':' '{print$2}')
 
 ANT_IFS=$IFS
 IFS=$'\n'
+
+# Recorre la lista de usuarios
 for LINEA in `cat $LISTA |  grep -v ^#`
 do
-	USUARIO=$(echo  $LINEA |awk -F ':' '{print $1}')
-	GRUPO=$(echo  $LINEA |awk -F ':' '{print $2}')
-	echo "sudo useradd -m -s /bin/bash -g $GRUPO $USUARIO"
+        # Extrae el nombre de usuario.
+        USUARIO=$(echo  $LINEA |awk -F ',' '{print $1}')
+        # Extrae el grupo.
+        GRUPO=$(echo  $LINEA |awk -F ',' '{print $2}')
+        #Extrae el directorio HOME.
+        DIRECTORIO_HOME=$(echo "$LINEA" | awk -F ',' '{print $3}')
+
+        #Crea el grupo
+        sudo groupadd "$GRUPO"
+
+        #Crea el usuario.
+        sudo useradd -m -s /bin/bash -g "$GRUPO" -d "$DIRECTORIO_HOME" -p "$CLAVE" "$USUARIO"
+
 done
 IFS=$ANT_IFS
-
