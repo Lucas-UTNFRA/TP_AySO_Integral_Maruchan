@@ -1,9 +1,15 @@
 version: '3'
 
 services:
-    web:
-        image: 
-        ports:
-            - 
-        volumes:
-            - 
+  web:
+    # TODO: Agregar las imagenes de cada integrante
+    # Cada uno tiene que agregar su imagen y dejar comentada la de los demás integrantes. En la rama main tenemos que usar la imagen del docker-hub del lider/R1
+    # Agregar lineas como la que dejo a continuación:
+    # image: <usuario_docker-hub>/tp-div_313_grupo_maruchan # Rn / R6 
+    image: facundoberges/tp-div_313_grupo_maruchan # R5 / R6 
+    ports:
+      - "8081:80"
+    volumes:
+      - ./web/file/:/user/share/nginx/html/file/
+
+
