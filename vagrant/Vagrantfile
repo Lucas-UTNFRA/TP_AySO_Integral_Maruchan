@@ -1,0 +1,86 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  # Configuración de la máquina virtual testing
+  config.vm.define "testing" do |vmTesting|
+    vmTesting.vm.box = "ubuntu/jammy64"
+    vmTesting.vm.hostname = "vmTesting"
+    vmTesting.vm.network "private_network", :name => '', ip: "192.168.56.10"
+    
+    # Compartir carpeta del host donde estoy parado contra la VM
+    # vmTesting.vm.synced_folder 'nombre_carpeta/', '/home/vagrant/compartido', owner: 'vagrant', group: 'vagrant'
+
+    # Agregar la key Privada de ssh en .vagrant/machines/default/virtualbox/private_key
+    vmTesting.ssh.insert_key = true
+
+    # Agregar nuevos discos 
+    vmTesting.vm.disk :disk, size: "5GB", name: "#{vmTesting.vm.hostname}_extra_storage"
+    vmTesting.vm.disk :disk, size: "3GB", name: "#{vmTesting.vm.hostname}_extra_storage2"
+    vmTesting.vm.disk :disk, size: "2GB", name: "#{vmTesting.vm.hostname}_extra_storage3"
+    vmTesting.vm.disk :disk, size: "1GB", name: "#{vmTesting.vm.hostname}_extra_storage4"
+
+    vmTesting.vm.provider "virtualbox" do |vb|
+      vb.memory = "1024"
+      vb.name = "vmTesting"
+      vb.cpus = 1
+      vb.linked_clone = true
+      # Seteo controladora Grafica
+      vb.customize ['modifyvm', :id, '--graphicscontroller', 'vmsvga']      
+    end 
+    
+    # Ejecutar scripts de provisión
+    vmTesting.vm.provision "shell", path: "provisioning/install_packages_ubuntu.sh"
+    vmTesting.vm.provision "shell", path: "provisioning/set_in_sudoers.sh"
+    vmTesting.vm.provision "shell", path: "provisioning/resolve_vm_names.sh"
+    vmTesting.vm.provision "shell", path: "provisioning/share_ssh_keys.sh", args: ["produccion"]
+    vmTesting.vm.provision "shell", path: "provisioning/docker_install_ubuntu.sh"
+    
+    # Clonado de repositorio de GitHub con el TP Integral
+    vmTesting.vm.provision "shell", path: "provisioning/clone_tp_repository.sh"
+    
+    vmTesting.vm.provision "shell", path: "provisioning/enable_ssh_password.sh"
+  end
+  
+  # Configuración de la máquina virtual de producción
+  # ..., autostart: false do |...# Deshabilitar el inicio automático de la VM de producción
+  config.vm.define "produccion" do |vmProduccion|
+    vmProduccion.vm.box = "fedora/41-cloud-base"
+    vmProduccion.vm.hostname = "vmProduccion"
+    vmProduccion.vm.network "private_network", :name => '', ip: "192.168.56.11"
+    
+    # Agregar la key Privada de ssh en .vagrant/machines/default/virtualbox/private_key
+    vmProduccion.ssh.insert_key = true
+    vmProduccion.vm.boot_timeout = 600
+
+    # Agregar nuevos discos 
+    vmProduccion.vm.disk :disk, size: "5GB", name: "#{vmProduccion.vm.hostname}_extra_storage"
+    vmProduccion.vm.disk :disk, size: "3GB", name: "#{vmProduccion.vm.hostname}_extra_storage2"
+    vmProduccion.vm.disk :disk, size: "2GB", name: "#{vmProduccion.vm.hostname}_extra_storage3"
+    vmProduccion.vm.disk :disk, size: "1GB", name: "#{vmProduccion.vm.hostname}_extra_storage4"
+    
+    vmProduccion.vm.provider "virtualbox" do |vb2|
+      vb2.memory = "1024"
+      vb2.name = "vmProduccion"
+      vb2.cpus = 1
+      vb2.linked_clone = true
+      
+      # Seteo de controladora Grafica
+      vb2.customize ['modifyvm', :id, '--graphicscontroller', 'vmsvga']
+    end
+    
+    # Ejecutar scripts de provisión
+    vmProduccion.vm.provision "shell", path: "provisioning/install_packages_fedora.sh"
+    vmProduccion.vm.provision "shell", path: "provisioning/set_in_sudoers.sh"
+    vmProduccion.vm.provision "shell", path: "provisioning/resolve_vm_names.sh"
+    vmProduccion.vm.provision "shell", path: "provisioning/share_ssh_keys.sh", args: ["testing"]
+    vmProduccion.vm.provision "shell", path: "provisioning/docker_install_fedora.sh"
+    
+    # Clonado de repositorio de GitHub con el TP Integral
+    vmProduccion.vm.provision "shell", path: "provisioning/clone_tp_repository.sh"
+
+    vmProduccion.vm.provision "shell", path: "provisioning/enable_ssh_password.sh"
+  end
+
+end
