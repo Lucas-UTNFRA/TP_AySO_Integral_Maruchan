@@ -1,52 +1,38 @@
 #!/bin/bash
 
 ##############################################
-#   Script para instalar docker en ubuntu*   #
-#					     #
-#	      *según doc. oficial*	     #
+#   Script para instalar docker en fedora*   #
+#                                            #
+#            *según doc. oficial*            #
 ##############################################
 
-
-# Definición de paquetes
-
-PACKAGES=docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc
+VAGRANT_USER="vagrant"
 
 
-# Iteración para desinstalar los paquetes previamente definidos
+# Desinstalar los paquetes preinstalados
 
 echo "Desinstalando paquetes antiguos... ⏳"
 
-for pkg in $PACKAGES; do 
-	sudo apt-get remove -y "$pkg"; 
-done
-
-sudo apt-get autoremove -y
+sudo dnf remove -y docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-selinux \
+                  docker-engine-selinux \
+                  docker-engine
 
 echo "Paquetes desinstalados correctamente ✅"
-
-
-# Añadir key GPG oficial de Docker:
-
-echo "Añadiendo clave GPG oficial de docker... ⏳"
-
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-echo "Clave añadida correctamente ✅"
 
 
 # Añadir el repositorio a fuentes APT:
 
 echo "Añadiendo repositorio a apt source-list... ⏳"
 
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
+sudo dnf -y install dnf-plugins-core
+sudo dnf-3 config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
 
 echo "Repositorio añadido correctamente ✅"
 
@@ -55,7 +41,7 @@ echo "Repositorio añadido correctamente ✅"
 
 echo "Instalando docker... ⏳"
 
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 echo "Docker instalado correctamente ✅"
 
@@ -74,15 +60,15 @@ rm -rf ~/.docker
 
 # Añadir usuario actual a grupo docker
 
-echo "Añadiendo usuario $USER al grupo docker..."
+echo "Añadiendo usuario $VAGRANT_USER al grupo docker..."
 
-sudo usermod -aG docker "$USER"
-echo "---Usuario '$USER' añadido al grupo 'docker'. ✅---"
+sudo usermod -aG docker "$VAGRANT_USER"
+echo "---Usuario '$VAGRANT_USER' añadido al grupo 'docker'. ✅---"
 
 
 # Reiniciar servicio de docker, por las dudas
 
-sudo systemctl restart docker
+sudo systemctl enable --now docker
 
 
 # Testear que corra la imagen hello-world para comprobar instalación
