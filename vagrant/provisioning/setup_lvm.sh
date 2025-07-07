@@ -17,7 +17,7 @@ EOF
 done
 
 # formateo de particion swap
-sudo fdisk /dev/sdd << EOF
+sudo fdisk /dev/sdf << EOF
 n
 p
 
@@ -29,9 +29,9 @@ w
 EOF
 
 # Limpiar mugre de los discos
-for disk in "${DISCOS_LV[@]}" sdd; do
+for disk in "${DISCOS_LV[@]}" sde; do
   sudo wipefs -a /dev/"${disk}1" || true
-; done
+done
 
 # Crear el phisical volume
 sudo pvcreate /dev/sdc1
